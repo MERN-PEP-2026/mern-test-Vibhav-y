@@ -1,9 +1,16 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import Badge from '../components/ui/Badge';
+import Button from '../components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
+import Input from '../components/ui/Input';
+import Textarea from '../components/ui/Textarea';
 
 const DashboardPage = () => {
   const { user, logout, setError } = useAuth();
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', dueDate: '', tags: '' });
@@ -42,7 +49,7 @@ const DashboardPage = () => {
       };
       await api.post('/tasks', payload);
       setForm({ title: '', description: '', dueDate: '', tags: '' });
-      setMessage({ type: 'success', text: 'Task created' });
+      setMessage({ type: 'success', text: 'Task created successfully.' });
       fetchTasks();
     } catch (err) {
       const text = err.response?.data?.message || err.message;
@@ -62,7 +69,7 @@ const DashboardPage = () => {
   };
 
   const removeTask = async (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    if (!window.confirm('Delete this task?')) return;
     try {
       await api.delete(`/tasks/${taskId}`);
       fetchTasks();
@@ -71,103 +78,124 @@ const DashboardPage = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const summary = useMemo(() => {
     const completed = tasks.filter((task) => task.status === 'completed').length;
     return `${completed}/${tasks.length} completed`;
   }, [tasks]);
 
   return (
-    <div className="app-shell">
-      <div className="page-actions">
-        <div className="small-text">
-          Signed in as <strong>{user?.name}</strong>
+    <main className="dashboard-page">
+      <section className="dashboard-topbar">
+        <div>
+          <h1 className="dashboard-title">Task Dashboard</h1>
+          <p className="muted-text">{summary}</p>
         </div>
-        <button className="ghost" onClick={logout} type="button">
-          Logout
-        </button>
-      </div>
-      <h1 className="page-heading">My Task Dashboard</h1>
-      <p className="small-text">{summary}</p>
-      <div className="card">
-        <h2>Create a task</h2>
-        {message && <div className={`toast ${message.type}`}>{message.text}</div>}
-        <form onSubmit={handleCreate} className="form-grid">
-          <input
-            name="title"
-            placeholder="Title"
-            value={form.title}
-            onChange={handleChange}
-            required
-          />
-          <textarea
-            name="description"
-            placeholder="Description"
-            rows={4}
-            value={form.description}
-            onChange={handleChange}
-          />
-          <input
-            name="dueDate"
-            type="date"
-            value={form.dueDate}
-            onChange={handleChange}
-          />
-          <input
-            name="tags"
-            placeholder="Tags (comma separated)"
-            value={form.tags}
-            onChange={handleChange}
-          />
-          <button className="primary" type="submit">
-            Add task
-          </button>
-        </form>
-      </div>
+        <div className="dashboard-topbar-actions">
+          <span className="muted-text">Signed in as {user?.name}</span>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
+      </section>
 
-      <div className="card">
-        <h2>All tasks</h2>
-        {loading && <p className="small-text">Loading tasks…</p>}
-        <div className="task-grid">
-          {tasks.map((task) => (
-            <div key={task._id} className="card">
-              <div className="task-meta">
-                <span className={`status ${task.status}`}>{task.status}</span>
-                <span>{new Date(task.createdAt).toLocaleDateString()}</span>
-              </div>
-              <h3>{task.title}</h3>
-              {task.description && <p className="small-text">{task.description}</p>}
-              <div className="task-meta">
-                {task.dueDate && (
-                  <span>Due {new Date(task.dueDate).toLocaleDateString()}</span>
-                )}
-                <div>
-                  <button className="ghost" onClick={() => toggleStatus(task)} type="button">
-                    Toggle status
-                  </button>
-                  <button
-                    className="ghost"
-                    onClick={() => removeTask(task._id)}
-                    type="button"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              {task.tags?.length > 0 && (
-                <div className="tag-list">
-                  {task.tags.map((tag) => (
-                    <span key={tag} className="tag">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Create task</CardTitle>
+          <CardDescription>Add title, due date, details, and tags.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {message && (
+            <div className={`ui-alert ${message.type === 'error' ? 'ui-alert-error' : 'ui-alert-success'}`}>
+              {message.text}
             </div>
-          ))}
-          {!loading && tasks.length === 0 && <p className="small-text">No tasks created yet.</p>}
-        </div>
-      </div>
-    </div>
+          )}
+          <form onSubmit={handleCreate} className="form-grid form-grid-2">
+            <Input
+              name="title"
+              placeholder="Title"
+              value={form.title}
+              onChange={handleChange}
+              required
+            />
+            <Input name="dueDate" type="date" value={form.dueDate} onChange={handleChange} />
+            <Textarea
+              name="description"
+              placeholder="Description"
+              rows={4}
+              value={form.description}
+              onChange={handleChange}
+              className="form-span-2"
+            />
+            <Input
+              name="tags"
+              placeholder="Tags (comma separated)"
+              value={form.tags}
+              onChange={handleChange}
+              className="form-span-2"
+            />
+            <Button type="submit" className="form-span-2">
+              Add task
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All tasks</CardTitle>
+          <CardDescription>Track progress and keep work moving.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading && <p className="muted-text">Loading tasks...</p>}
+          <div className="task-list">
+            {!loading && tasks.length === 0 && <p className="muted-text">No tasks yet.</p>}
+            {tasks.map((task) => (
+              <article key={task._id} className="task-item">
+                <div className="task-item-header">
+                  <Badge variant={task.status === 'completed' ? 'success' : 'warning'}>
+                    {task.status}
+                  </Badge>
+                  <span className="muted-text">{new Date(task.createdAt).toLocaleDateString()}</span>
+                </div>
+                <h3>{task.title}</h3>
+                {task.description && <p className="muted-text">{task.description}</p>}
+                <div className="task-item-footer">
+                  <div>
+                    {task.dueDate && (
+                      <span className="muted-text">
+                        Due {new Date(task.dueDate).toLocaleDateString()}
+                      </span>
+                    )}
+                    {task.tags?.length > 0 && (
+                      <div className="tag-list">
+                        {task.tags.map((tag) => (
+                          <Badge key={tag} variant="secondary">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="task-actions">
+                    <Button variant="ghost" size="sm" onClick={() => toggleStatus(task)}>
+                      Toggle status
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => removeTask(task._id)}>
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </main>
   );
 };
 

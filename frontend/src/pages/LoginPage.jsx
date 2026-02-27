@@ -1,6 +1,9 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Button from '../components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
+import Input from '../components/ui/Input';
 
 const LoginPage = () => {
   const { login, error, setError } = useAuth();
@@ -30,37 +33,42 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="app-shell">
-      <div className="card">
-        <h1 className="page-heading">Welcome back</h1>
-        {error && <div className="toast error">{error}</div>}
-        <form onSubmit={handleSubmit} className="form-grid">
-          <input
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="Email"
-            required
-          />
-          <input
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Password"
-            minLength={6}
-            required
-          />
-          <button className="primary" type="submit" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-        <p className="small-text">
-          Need an account? <Link to="/register">Create one.</Link>
-        </p>
-      </div>
-    </div>
+    <main className="auth-page">
+      <Card className="auth-card">
+        <CardHeader>
+          <CardTitle>Welcome back</CardTitle>
+          <CardDescription>Sign in to manage your tasks.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && <div className="ui-alert ui-alert-error">{error}</div>}
+          <form onSubmit={handleSubmit} className="form-grid">
+            <Input
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Email"
+              required
+            />
+            <Input
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Password"
+              minLength={6}
+              required
+            />
+            <Button type="submit" disabled={submitting}>
+              {submitting ? 'Signing in...' : 'Sign in'}
+            </Button>
+          </form>
+          <p className="muted-text">
+            Need an account? <Link to="/register">Create one</Link>
+          </p>
+        </CardContent>
+      </Card>
+    </main>
   );
 };
 
